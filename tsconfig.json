@@ -24,8 +24,10 @@
       "@app/common": ["./libs/common/src"],
       "@app/common/*": ["./libs/common/src/*"],
       "@app/config": ["./libs/config/src"],
-      "@app/config/*": ["./libs/config/src/*"]
+      "@app/config/*": ["./libs/config/src/*"],
+      "@app/swagger-models": ["./libs/swagger-models/src"],
+      "@app/swagger-models/*": ["./libs/swagger-models/src/*"]
     }
   },
-  "include": ["apps/**/*", "libs/**/*", ".eslintrc.js", "**/*.js", ".prettierrc.js"]
+  "include": ["apps/**/*", "libs/**/*", ".eslintrc.js", "**/*.js", ".prettierrc.js", "swagger.ts"]
 }

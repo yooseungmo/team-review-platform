@@ -72,6 +72,7 @@ module.exports = {
           'apps/**/*.e2e-spec.{ts,js}',
           'apps/gateway/src/proxy/**/*.ts',
         ],
+        packageDir: ['.'],
       },
     ],
     // 모듈 순환 의존성 검사 및 릴레이션 시 비활성화

@@ -43,6 +43,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
       }
+    },
+    "swagger-models": {
+      "type": "library",
+      "root": "libs/swagger-models",
+      "entryFile": "index",
+      "sourceRoot": "libs/swagger-models/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/swagger-models/tsconfig.lib.json"
+      }
     }
   }
 }
