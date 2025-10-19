@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { GameEventModule } from './game-event.module';
+import { GameEventModule } from './game-event/game-event.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(GameEventModule);

@@ -1,0 +1,2 @@
+export const AUTH_SERVICE = 'AUTH_SERVICE';
+export const GAME_EVENT_SERVICE = 'GAME_EVENT_SERVICE';

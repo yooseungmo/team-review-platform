@@ -1,0 +1,82 @@
+# version: '3.9'
+
+services:
+  # ─────────────── MongoDB ───────────────
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - trp-net
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"] # ← 인증 플래그 제거
+      interval: 60s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  # ─────────────── Auth MS ───────────────
+  auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+      args:
+        SERVICE: auth
+    env_file:
+      - apps/auth/.env
+    depends_on:
+      - mongo
+    networks:
+      - trp-net
+    # 디버깅용으로 auth 서비스 직접 보고 싶으면 해제
+    ports:
+      - '3001:3000'
+
+  # ────────────── Game- Event MS ──────────────
+  game-event:
+    build:
+      context: .
+      dockerfile: apps/game-event/Dockerfile
+      args:
+        SERVICE: game-event
+    env_file:
+      - apps/game-event/.env
+    depends_on:
+      - mongo
+    networks:
+      - trp-net
+    # 디버깅용으로 event 서비스 직접 보고 싶으면 해제
+    ports:
+      - '3002:3000'
+
+  # ───────────── Gateway MS ─────────────
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+      args:
+        SERVICE: gateway
+    env_file:
+      - apps/gateway/.env
+    depends_on:
+      - auth
+      - game-event
+    networks:
+      - trp-net
+
+    # 개발용: Gateway만 외부 3000번 포트로 노출
+    ports:
+      - '3000:3000'
+
+    # 제출용: 외부 포트 차단 후 제출하기
+
+networks:
+  trp-net:
+    driver: bridge
+
+volumes:
+  mongo-data:

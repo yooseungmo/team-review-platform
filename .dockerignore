@@ -1,0 +1,13 @@
+# 의존성 & 빌드 산출물
+node_modules
+dist
+
+# IDE & 시스템
+.git
+.gitignore
+.vscode
+.DS_Store
+
+# 테스트·로컬 아웃풋
+coverage
+*.log
