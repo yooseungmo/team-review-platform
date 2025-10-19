@@ -13,8 +13,7 @@ export class ProxyService {
 
   private getEnv(key: string): string {
     const value = this.config.get<string>(key);
-    if (!value)
-      throw new InternalServerErrorException(`${key} is not defined in config`);
+    if (!value) throw new InternalServerErrorException(`${key} is not defined in config`);
     return value;
   }
 
@@ -26,8 +25,7 @@ export class ProxyService {
 
   private _eventBase?: string;
   private get eventBase(): string {
-    if (!this._eventBase)
-      this._eventBase = this.getEnv('GAME_EVENT_SERVICE_URL');
+    if (!this._eventBase) this._eventBase = this.getEnv('GAME_EVENT_SERVICE_URL');
     return this._eventBase;
   }
 

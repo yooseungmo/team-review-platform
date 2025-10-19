@@ -10,6 +10,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     // "baseUrl": "./",
+    "allowJs": true,
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -25,5 +26,6 @@
       "@app/config": ["./libs/config/src"],
       "@app/config/*": ["./libs/config/src/*"]
     }
-  }
+  },
+  "include": ["apps/**/*", "libs/**/*", ".eslintrc.js", "**/*.js", ".prettierrc.js"]
 }

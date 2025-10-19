@@ -19,9 +19,7 @@ export function isNotNull<T>(value?: T | null): value is T {
 
 type TSimpleValue<T> = T | null | undefined;
 
-export function isEmptySimple<T>(
-  value: TSimpleValue<T>,
-): value is null | undefined {
+export function isEmptySimple<T>(value: TSimpleValue<T>): value is null | undefined {
   return isUndefined(value) || isNull(value);
 }
 
@@ -29,9 +27,7 @@ export function isNotEmptySimple<T>(value: TSimpleValue<T>): value is T {
   return !isEmptySimple(value);
 }
 
-export function isEmptyString(
-  value?: string | null,
-): value is null | undefined {
+export function isEmptyString(value?: string | null): value is null | undefined {
   return FF.pipe(
     value,
     FE.fromNullable(true),
@@ -52,9 +48,7 @@ export function isEmpty<T>(value?: T | null): value is null | undefined {
     value,
     FE.fromNullable(true),
     FE.chain((notNull) => {
-      return typeof notNull === 'string' && notNull === ''
-        ? FE.left(true)
-        : FE.right(notNull);
+      return typeof notNull === 'string' && notNull === '' ? FE.left(true) : FE.right(notNull);
     }),
     FE.chain((notString) => {
       return typeof notString === 'number' && Number.isNaN(notString)
@@ -62,9 +56,7 @@ export function isEmpty<T>(value?: T | null): value is null | undefined {
         : FE.right(notString);
     }),
     FE.chain((notNumber) => {
-      return typeof notNumber === 'object' &&
-        Array.isArray(notNumber) &&
-        notNumber.length < 1
+      return typeof notNumber === 'object' && Array.isArray(notNumber) && notNumber.length < 1
         ? FE.left(true)
         : FE.right(notNumber);
     }),

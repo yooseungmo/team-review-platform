@@ -1,10 +1,5 @@
 import { RBAC_KEY } from '@app/common';
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
@@ -12,8 +7,7 @@ export class RbacGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(ctx: ExecutionContext): boolean {
-    const required: string[] =
-      this.reflector.get<string[]>(RBAC_KEY, ctx.getHandler()) ?? [];
+    const required: string[] = this.reflector.get<string[]>(RBAC_KEY, ctx.getHandler()) ?? [];
     if (required.length === 0) return true;
 
     const req = ctx.switchToHttp().getRequest();
