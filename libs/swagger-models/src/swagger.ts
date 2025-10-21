@@ -6,6 +6,8 @@ import { ApiUserGetQueryRequestDto } from '../../../apps/auth/src/user/dto/api-u
 import { ApiUserGetQueryResponseDto } from '../../../apps/auth/src/user/dto/api-user-get-query-response.dto';
 import { ApiUserPatchRoleTeamResponseDto } from '../../../apps/auth/src/user/dto/api-user-patch-role-team-response.dto';
 import { ApiUserPatchStatusResponseDto } from '../../../apps/auth/src/user/dto/api-user-patch-status-response.dto';
+import { ApiEventCommonResponseDto } from '../../../apps/game-event/src/event/dto/api-event-common-response.dto';
+import { ApiEventGetQueryResponseDto } from '../../../apps/game-event/src/event/dto/api-event-get-query-response.dto';
 
 export const SwaggerModels = [
   ApiAuthPostRegisterResponseDto,
@@ -17,4 +19,6 @@ export const SwaggerModels = [
   ApiUserGetQueryResponseDto,
   ApiUserPatchRoleTeamResponseDto,
   ApiUserPatchStatusResponseDto,
+  ApiEventCommonResponseDto,
+  ApiEventGetQueryResponseDto,
 ];

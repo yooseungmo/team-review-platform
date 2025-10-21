@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { GameEventModule } from '../src/game-event/game-event.module';
+import { GameEventModule } from '../src/event/event.module';
 
 describe('GameEventController (e2e)', () => {
   let app: INestApplication;

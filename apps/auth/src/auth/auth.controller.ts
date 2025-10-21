@@ -21,7 +21,15 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: '사용자 등록' })
+  @ApiOperation({
+    summary: '사용자 등록',
+    description: `
+    ### 역할 및 팀 규칙
+      - ADMIN / VIEWER → team=null (고정)
+      - PLANNER → team=PM (고정)
+      - REVIEWER → team ∈ {PM, DEV, QA, CS} (필수 지정)
+  `,
+  })
   @ApiBody({ type: ApiAuthPostRegisterRequestDto })
   @ApiResponse({ status: 201, type: ApiAuthPostRegisterResponseDto })
   register(@Body() dto: ApiAuthPostRegisterRequestDto) {

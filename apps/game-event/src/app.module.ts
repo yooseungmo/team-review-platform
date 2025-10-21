@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import * as Joi from 'joi';
-import { GameEventModule } from './game-event/game-event.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -14,6 +13,12 @@ import { GameEventModule } from './game-event/game-event.module';
         PORT: Joi.number().default(3002),
         MONGODB_URI: Joi.string().uri().required(),
         MONGODB_DB: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
+        JWT_EXPIRES_IN: Joi.string().default('3600s'),
+        JWT_ISS: Joi.string().required(),
+        JWT_AUD: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.string().default('7d'),
       }),
     }),
     MongooseModule.forRootAsync({
@@ -24,7 +29,7 @@ import { GameEventModule } from './game-event/game-event.module';
       }),
       inject: [ConfigService],
     }),
-    GameEventModule,
+    EventModule,
   ],
   controllers: [],
   providers: [],

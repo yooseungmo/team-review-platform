@@ -36,7 +36,15 @@ export class UserController {
 
   @Patch(':id/role-team')
   @Rbac(Role.ADMIN)
-  @ApiOperation({ summary: '사용자 역할/팀 변경 (ADMIN)' })
+  @ApiOperation({
+    summary: '사용자 역할/팀 변경 (ADMIN)',
+    description: `
+    ### 역할 및 팀 규칙
+      - ADMIN / VIEWER → team=null (고정)
+      - PLANNER → team=PM (고정)
+      - REVIEWER → team ∈ {PM, DEV, QA, CS} (필수 지정)
+  `,
+  })
   @ApiResponse({ status: 200, type: ApiUserPatchRoleTeamResponseDto })
   updateRoleTeam(@Param('id') id: string, @Body() dto: ApiUserPatchRoleTeamRequestDto) {
     return this.userService.updateUserRoleTeam(id, dto);
