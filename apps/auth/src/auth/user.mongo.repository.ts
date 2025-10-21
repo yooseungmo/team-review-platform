@@ -1,6 +1,6 @@
+import { isEmpty } from '@app/common';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isEmpty } from '../../../../libs/common/src';
 import { User, UserDocument, UserModel } from '../user/schemas/user.schema';
 import { ApiAuthPostRegisterRequestDto } from './dto/api-auth-post-register-request.dto';
 
@@ -27,6 +27,14 @@ export class UserMongoRepository {
     if (isEmpty(user)) return;
 
     await user.setRefreshToken(token); // 해시 적용
+    await user.save();
+  }
+
+  async clearRefreshToken(id: string): Promise<void> {
+    const user = await this.userModel.findById(id).exec();
+    if (isEmpty(user)) return;
+
+    await user.clearRefreshToken();
     await user.save();
   }
 }

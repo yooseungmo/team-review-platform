@@ -1,10 +1,13 @@
+import { CurrentUser, Public, UserPayloadDto } from '@app/common';
+import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Public } from '../../../../libs/common/src';
-import { JwtAuthGuard, RbacGuard } from '../../../../libs/common/src/guard';
 import { AuthService } from './auth.service';
 import { ApiAuthPostLoginRequestDto } from './dto/api-auth-post-login-request.dto';
 import { ApiAuthPostLoginResponseDto } from './dto/api-auth-post-login-response.dto';
+import { ApiAuthPostLogoutResponseDto } from './dto/api-auth-post-logout-response.dto';
+import { ApiAuthPostRefreshRequestDto } from './dto/api-auth-post-refresh-request.dto';
+import { ApiAuthPostRefreshResponseDto } from './dto/api-auth-post-refresh-response.dto';
 import { ApiAuthPostRegisterRequestDto } from './dto/api-auth-post-register-request.dto';
 import { ApiAuthPostRegisterResponseDto } from './dto/api-auth-post-register-response.dto';
 
@@ -31,5 +34,22 @@ export class AuthController {
   @ApiResponse({ status: 200, type: ApiAuthPostLoginResponseDto })
   login(@Body() dto: ApiAuthPostLoginRequestDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('refresh')
+  @ApiOperation({ summary: '로그인 연장 (Access Token 재발급)' })
+  @ApiBody({ type: ApiAuthPostRefreshRequestDto })
+  @ApiResponse({ status: 200, type: ApiAuthPostRefreshResponseDto })
+  async refresh(@Body() dto: ApiAuthPostRefreshRequestDto): Promise<ApiAuthPostRefreshResponseDto> {
+    return this.authService.refresh(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiResponse({ status: 200, type: ApiAuthPostLogoutResponseDto })
+  async logout(@CurrentUser() user: UserPayloadDto): Promise<ApiAuthPostLogoutResponseDto> {
+    return this.authService.logout(user.sub);
   }
 }

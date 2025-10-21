@@ -1,6 +1,8 @@
-import { Role } from '..';
+import { Role, Team } from '..';
 
-export class UserDto {
-  userId: string;
-  roles: Role;
+export class UserPayloadDto {
+  sub: string;
+  email: string;
+  role: Role;
+  team?: Team;
 }
