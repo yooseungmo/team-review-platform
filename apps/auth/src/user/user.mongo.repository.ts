@@ -1,4 +1,4 @@
-import { isEmpty } from '@app/common';
+import { isEmpty, Role, Team } from '@app/common';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery } from 'mongoose';
@@ -60,5 +60,18 @@ export class UserMongoRepository {
       this.userModel.countDocuments(filter).exec(),
     ]);
     return { items, total };
+  }
+
+  async updateRoleTeam(id: string, role: Role, team: Team | null): Promise<UserDocument | null> {
+    // runValidators 로 스키마의 team 필수 로직 재검증
+    return this.userModel
+      .findByIdAndUpdate(id, { role, team: team ?? null }, { new: true, runValidators: true })
+      .exec();
+  }
+
+  async updateActive(id: string, isActive: boolean): Promise<UserDocument | null> {
+    return this.userModel
+      .findByIdAndUpdate(id, { isActive }, { new: true, runValidators: true })
+      .exec();
   }
 }

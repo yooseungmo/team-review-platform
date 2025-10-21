@@ -1,10 +1,14 @@
 import { Rbac, Role } from '@app/common';
 import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiUserGetByIdResponseDto } from './dto/api-user-get-by-id-response.dto';
 import { ApiUserGetQueryRequestDto } from './dto/api-user-get-query-request.dto';
 import { ApiUserGetQueryResponseDto } from './dto/api-user-get-query-response.dto';
+import { ApiUserPatchRoleTeamRequestDto } from './dto/api-user-patch-role-team-request.dto';
+import { ApiUserPatchRoleTeamResponseDto } from './dto/api-user-patch-role-team-response.dto';
+import { ApiUserPatchStatusRequestDto } from './dto/api-user-patch-status-request.dto';
+import { ApiUserPatchStatusResponseDto } from './dto/api-user-patch-status-response.dto';
 import { UserService } from './user.service';
 
 @ApiTags('Users')
@@ -14,7 +18,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('users/:id')
+  @Get(':id')
   @Rbac(Role.ADMIN)
   @ApiOperation({ summary: '사용자 상세 조회 (ADMIN)' })
   @ApiResponse({ status: 200, type: ApiUserGetByIdResponseDto })
@@ -22,11 +26,27 @@ export class UserController {
     return this.userService.getUserById(id);
   }
 
-  @Get('users')
+  @Get('')
   @Rbac(Role.ADMIN)
   @ApiOperation({ summary: '사용자 목록 조회 (ADMIN) — filter + pagination' })
   @ApiResponse({ status: 200, type: ApiUserGetQueryResponseDto })
   async list(@Query() q: ApiUserGetQueryRequestDto) {
     return this.userService.listUsers(q);
+  }
+
+  @Patch(':id/role-team')
+  @Rbac(Role.ADMIN)
+  @ApiOperation({ summary: '사용자 역할/팀 변경 (ADMIN)' })
+  @ApiResponse({ status: 200, type: ApiUserPatchRoleTeamResponseDto })
+  updateRoleTeam(@Param('id') id: string, @Body() dto: ApiUserPatchRoleTeamRequestDto) {
+    return this.userService.updateUserRoleTeam(id, dto);
+  }
+
+  @Patch('users/:id/status')
+  @Rbac(Role.ADMIN)
+  @ApiOperation({ summary: '사용자 활성/비활성 (ADMIN)' })
+  @ApiResponse({ status: 200, type: ApiUserPatchStatusResponseDto })
+  updateStatus(@Param('id') id: string, @Body() dto: ApiUserPatchStatusRequestDto) {
+    return this.userService.updateUserStatus(id, dto);
   }
 }
