@@ -10,7 +10,9 @@ import { User, UserDocument, UserModel } from './schemas/user.schema';
 export class UserMongoRepository {
   constructor(@InjectModel(User.name) private userModel: UserModel) {}
 
-  async createUser(dto: ApiAuthPostRegisterRequestDto): Promise<UserDocument> {
+  async createUser(
+    dto: ApiAuthPostRegisterRequestDto & { team: Team | null },
+  ): Promise<UserDocument> {
     const exists = await this.userModel.findOne({ email: dto.email }).exec();
     if (exists) throw new ConflictException('Email already exists');
     return this.userModel.create(dto);

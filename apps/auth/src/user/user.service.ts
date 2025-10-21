@@ -1,5 +1,5 @@
-import { JwtConfig, Role, Team } from '@app/common';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { JwtConfig, normalizeRoleTeamOrThrow } from '@app/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
@@ -50,17 +50,10 @@ export class UserService {
     id: string,
     dto: ApiUserPatchRoleTeamRequestDto,
   ): Promise<ApiUserPatchRoleTeamResponseDto> {
-    // 비즈니스 규칙: PLANNER/REVIEWER -> team 필수, ADMIN/VIEWER -> team null 허용 ?
-    let finalTeam: Team | null = dto.team ?? null;
-    if ((dto.role === Role.PLANNER || dto.role === Role.REVIEWER) && !finalTeam) {
-      throw new BadRequestException('team is required when role is PLANNER or REVIEWER');
-    }
-    if (dto.role === Role.ADMIN || dto.role === Role.VIEWER) {
-      // 팀 의미가 없으므로 null로 정규화
-      finalTeam = null;
-    }
+    /** Role-Team 규칙에 따라 팀을 검증·정규화 */
+    const normalizedTeam = normalizeRoleTeamOrThrow(dto.role, dto.team ?? null);
 
-    const updated = await this.repository.updateRoleTeam(id, dto.role, finalTeam);
+    const updated = await this.repository.updateRoleTeam(id, dto.role, normalizedTeam);
     if (!updated) throw new NotFoundException('User not found');
 
     return plainToInstance(ApiUserPatchRoleTeamResponseDto, updated, {

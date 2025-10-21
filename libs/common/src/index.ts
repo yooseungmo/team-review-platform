@@ -6,3 +6,4 @@ export * from './decorator';
 export * from './dto';
 export * from './status.enum';
 export * from './util';
+export * from './validation';

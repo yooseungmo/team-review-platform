@@ -1,8 +1,8 @@
 /* eslint-disable unused-imports/no-unused-vars */
+import { Role, Team } from '@app/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { HydratedDocument, Model } from 'mongoose';
-import { Role, Team } from '../../../../../libs/common/src';
 
 @Schema({ timestamps: true })
 export class User {
@@ -50,13 +50,24 @@ UserSchema.pre<UserDocument>('save', async function hashPassword(next) {
   next();
 });
 
-/** team 조건 검증: PLANNER/REVIEWER는 team 필수 */
-UserSchema.path('team').validate(function validateTeam(this: UserDocument, v: Team | null) {
-  if (this.role === Role.PLANNER || this.role === Role.REVIEWER) {
-    return !!v;
+/** Role/Team 조건 검증 
+  ADMIN / VIEWER → team=null
+  PLANNER → team=PM (고정)
+  REVIEWER → team ∈ {PM, DEV, QA, CS} (필수 지정)
+*/
+UserSchema.path('team').validate(function validatePair(this: UserDocument, v: Team | null) {
+  switch (this.role) {
+    case Role.ADMIN:
+    case Role.VIEWER:
+      return v == null; // 금지
+    case Role.PLANNER:
+      return v === Team.PM; // PM 고정
+    case Role.REVIEWER:
+      return v != null && [Team.PM, Team.DEV, Team.QA, Team.CS].includes(v);
+    default:
+      return false;
   }
-  return true;
-}, 'team is required when role is PLANNER or REVIEWER');
+}, 'Invalid role/team combination');
 
 /** 인스턴스 메서드 구현 */
 UserSchema.method(

@@ -1,4 +1,4 @@
-import { JwtConfig } from '@app/common';
+import { JwtConfig, normalizeRoleTeamOrThrow } from '@app/common';
 import {
   ConflictException,
   Injectable,
@@ -32,8 +32,11 @@ export class AuthService {
   }
 
   async register(dto: ApiAuthPostRegisterRequestDto): Promise<ApiAuthPostRegisterResponseDto> {
+    /** Role-Team 규칙에 따라 팀을 검증·정규화 */
+    const normalizedTeam = normalizeRoleTeamOrThrow(dto.role, dto.team ?? null);
+
     try {
-      const user: UserDocument = await this.repository.createUser(dto);
+      const user: UserDocument = await this.repository.createUser({ ...dto, team: normalizedTeam });
 
       return plainToInstance(ApiAuthPostRegisterResponseDto, user, {
         excludeExtraneousValues: true,
