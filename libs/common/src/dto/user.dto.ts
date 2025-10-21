@@ -1,4 +1,4 @@
-import { Role } from '@app/common';
+import { Role } from '..';
 
 export class UserDto {
   userId: string;

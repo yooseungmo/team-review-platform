@@ -1,5 +1,13 @@
 export enum Role {
-  USER = 'USER',
+  VIEWER = 'VIEWER',
+  PLANNER = 'PLANNER',
+  REVIEWER = 'REVIEWER',
   ADMIN = 'ADMIN',
-  // TODO: 다른 역할 추가 예정
+}
+
+export enum Team {
+  PM = 'PM',
+  DEV = 'DEV',
+  QA = 'QA',
+  CS = 'CS',
 }

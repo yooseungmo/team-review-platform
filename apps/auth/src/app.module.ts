@@ -16,6 +16,10 @@ import { AuthModule } from './auth/auth.module';
         MONGODB_DB: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().default('3600s'),
+        JWT_ISS: Joi.string().required(),
+        JWT_AUD: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.string().default('7d'),
       }),
     }),
 

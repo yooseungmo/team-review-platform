@@ -42,11 +42,7 @@ module.exports = {
     'import/no-unresolved': 'off',
     'no-console': 'warn',
     'object-curly-newline': ['error', { multiline: true, consistent: true }],
-    'lines-between-class-members': [
-      'error',
-      'always',
-      { exceptAfterSingleLine: true },
-    ],
+    'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'prefer-const': 'off',
     'import/extensions': [
       'error',
@@ -58,6 +54,8 @@ module.exports = {
         tsx: 'never',
       },
     ],
+    // Mongoose 관용적으로 허용
+    'no-underscore-dangle': ['error', { allow: ['_id', '_doc'] }],
     // DI를 위해 생성자가 비어 있어도 허용
     'no-useless-constructor': 'off',
     // DI 관련 빈 함수 사용 허용
@@ -71,6 +69,7 @@ module.exports = {
           'apps/**/*.spec.{ts,js}',
           'apps/**/*.e2e-spec.{ts,js}',
           'apps/gateway/src/proxy/**/*.ts',
+          'apps/libs/common/**/*.ts',
         ],
         packageDir: ['.'],
       },
