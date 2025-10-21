@@ -1,8 +1,10 @@
 import { isEmpty } from '@app/common';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserModel } from '../user/schemas/user.schema';
-import { ApiAuthPostRegisterRequestDto } from './dto/api-auth-post-register-request.dto';
+import { FilterQuery } from 'mongoose';
+import { ApiAuthPostRegisterRequestDto } from '../auth/dto/api-auth-post-register-request.dto';
+import { ApiUserGetQueryRequestDto } from './dto/api-user-get-query-request.dto';
+import { User, UserDocument, UserModel } from './schemas/user.schema';
 
 @Injectable()
 export class UserMongoRepository {
@@ -36,5 +38,27 @@ export class UserMongoRepository {
 
     await user.clearRefreshToken();
     await user.save();
+  }
+
+  async findUsers(q: ApiUserGetQueryRequestDto): Promise<{ items: UserDocument[]; total: number }> {
+    const { role, team, search, page, limit } = q;
+
+    const filter: FilterQuery<UserDocument> = {};
+    if (role) filter.role = role;
+    if (team) filter.team = team;
+    if (search) {
+      filter.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.userModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      this.userModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total };
   }
 }

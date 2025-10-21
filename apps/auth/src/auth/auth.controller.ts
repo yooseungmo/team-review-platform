@@ -1,8 +1,9 @@
 import { CurrentUser, Public, UserPayloadDto } from '@app/common';
 import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { ApiAuthGetMeResponseDto } from './dto/api-auth-get-me-response.dto';
 import { ApiAuthPostLoginRequestDto } from './dto/api-auth-post-login-request.dto';
 import { ApiAuthPostLoginResponseDto } from './dto/api-auth-post-login-response.dto';
 import { ApiAuthPostLogoutResponseDto } from './dto/api-auth-post-logout-response.dto';
@@ -51,5 +52,13 @@ export class AuthController {
   @ApiResponse({ status: 200, type: ApiAuthPostLogoutResponseDto })
   async logout(@CurrentUser() user: UserPayloadDto): Promise<ApiAuthPostLogoutResponseDto> {
     return this.authService.logout(user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiOperation({ summary: '내 프로필 조회(Access Token 검증)' })
+  @ApiResponse({ status: 200, type: ApiAuthGetMeResponseDto })
+  async me(@CurrentUser() user: UserPayloadDto): Promise<ApiAuthGetMeResponseDto> {
+    return this.authService.me(user.sub);
   }
 }

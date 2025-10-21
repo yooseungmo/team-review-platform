@@ -1,9 +1,16 @@
 import { JwtConfig } from '@app/common';
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
 import { UserDocument } from '../user/schemas/user.schema';
+import { UserMongoRepository } from '../user/user.mongo.repository';
+import { ApiAuthGetMeResponseDto } from './dto/api-auth-get-me-response.dto';
 import { ApiAuthPostLoginRequestDto } from './dto/api-auth-post-login-request.dto';
 import { ApiAuthPostLoginResponseDto } from './dto/api-auth-post-login-response.dto';
 import { ApiAuthPostLogoutResponseDto } from './dto/api-auth-post-logout-response.dto';
@@ -11,7 +18,6 @@ import { ApiAuthPostRefreshRequestDto } from './dto/api-auth-post-refresh-reques
 import { ApiAuthPostRefreshResponseDto } from './dto/api-auth-post-refresh-response.dto';
 import { ApiAuthPostRegisterRequestDto } from './dto/api-auth-post-register-request.dto';
 import { ApiAuthPostRegisterResponseDto } from './dto/api-auth-post-register-response.dto';
-import { UserMongoRepository } from './user.mongo.repository';
 
 @Injectable()
 export class AuthService {
@@ -114,9 +120,18 @@ export class AuthService {
 
   async logout(userId: string): Promise<ApiAuthPostLogoutResponseDto> {
     const user = await this.repository.findById(userId);
-    if (!user) throw new UnauthorizedException('Invalid refresh token');
+    if (!user) throw new UnauthorizedException('User not found');
 
     await this.repository.clearRefreshToken(userId);
     return { success: true };
+  }
+
+  async me(userId: string): Promise<ApiAuthGetMeResponseDto> {
+    const user = await this.repository.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    return plainToInstance(ApiAuthGetMeResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 }
