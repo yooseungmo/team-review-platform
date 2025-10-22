@@ -72,8 +72,22 @@ services:
     ports:
       - '3000:3000'
 
-    # 제출용: 외부 포트 차단 후 제출하기
-
+# ───────────── seed data ─────────────
+  seed-auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+      args:
+        SERVICE: auth
+      target: builder              # ★ builder 스테이지에서 실행
+    env_file:
+      - apps/auth/.env
+    depends_on:
+      - mongo
+    networks:
+      - trp-net
+    command: ["npx", "ts-node", "-r", "tsconfig-paths/register", "apps/auth/src/seed/seed.ts"]
+    
 networks:
   trp-net:
     driver: bridge

@@ -19,6 +19,8 @@
     "build:auth": "nest build auth",
     "build:game-event": "nest build game-event",
     "build:gateway": "nest build gateway",
+    "seed:auth": "ts-node -r tsconfig-paths/register apps/auth/src/seed/seed.ts",
+    "seed:auth:prod": "node dist/apps/auth/seed/seed.js",
     "lint": "eslint \"{apps,libs}/**/*.{ts,tsx}\" --fix",
     "lint:check": "eslint \"{apps,libs}/**/*.{ts,tsx}\" --max-warnings=0",
     "prettier:check": "prettier --check \"apps/**/*.ts\" \"libs/**/*.ts\"",
