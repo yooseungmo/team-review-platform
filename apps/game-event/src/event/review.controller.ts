@@ -1,7 +1,16 @@
-import { CurrentUser, Rbac, Role, UserPayloadDto } from '@app/common';
+import { CurrentUser, Rbac, Role, Team, UserPayloadDto } from '@app/common';
 
 import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseEnumPipe,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -11,6 +20,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ApiEventGetReviewHistoryResponseDto } from './dto/api-event-get-review-history-response.dto';
+import { ApiEventGetReviewMyQueryRequestDto } from './dto/api-event-get-review-my-query-request.dto';
+import { ApiEventGetReviewMyResponseDto } from './dto/api-event-get-review-my-response.dto';
 import { ApiEventGetReviewStatusResponseDto } from './dto/api-event-get-review-status-response.dto';
 import { ApiEventPatchReviewStatusRequestDto } from './dto/api-event-patch-review-status-request.dto';
 import { ReviewService } from './review.service';
@@ -69,5 +80,31 @@ export class ReviewController {
     @Body() dto: ApiEventPatchReviewStatusRequestDto,
   ) {
     return this.service.updateStatus(user, id, dto);
+  }
+
+  @Get('reviews/my')
+  @Rbac(Role.REVIEWER, Role.ADMIN)
+  @ApiOperation({ summary: '내 리뷰 작업함(배정된 이벤트)' })
+  @ApiResponse({ status: 200, type: ApiEventGetReviewMyResponseDto })
+  async listMy(
+    @CurrentUser() user: UserPayloadDto,
+    @Query() q: ApiEventGetReviewMyQueryRequestDto,
+  ) {
+    return this.service.listMyReviews(user, q);
+  }
+
+  @Get(':id/reviews/:team/history')
+  @ApiOperation({ summary: '팀별 리뷰 히스토리 조회' })
+  @ApiParam({ name: 'id', example: '66f01a2b3c4d5e6f77889900' })
+  @ApiParam({ name: 'team', enum: Team, example: Team.QA })
+  @ApiResponse({ status: 200, type: ApiEventGetReviewHistoryResponseDto })
+  @ApiResponse({ status: 403, description: '접근 권한 없음' })
+  @ApiResponse({ status: 404, description: '이벤트 없음' })
+  async getTeamHistory(
+    @CurrentUser() user: UserPayloadDto,
+    @Param('id') id: string,
+    @Param('team', new ParseEnumPipe(Team)) team: Team,
+  ) {
+    return this.service.getTeamHistoryReviews(user, id, team);
   }
 }

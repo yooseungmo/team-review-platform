@@ -21,8 +21,11 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ApiEventGetReviewHistoryResponseDto } from './dto/api-event-get-review-history-response.dto';
+import { ApiEventGetReviewMyQueryRequestDto } from './dto/api-event-get-review-my-query-request.dto';
+import { ApiEventGetReviewMyResponseDto } from './dto/api-event-get-review-my-response.dto';
 import { ApiEventGetReviewStatusResponseDto } from './dto/api-event-get-review-status-response.dto';
 import { ApiEventPatchReviewStatusRequestDto } from './dto/api-event-patch-review-status-request.dto';
+import { ReviewMyItemDto } from './dto/review-my-item.dto';
 import { EventMongoRepository } from './event.mongo.repository';
 import { GameEventDocument } from './schemas/event.schema';
 
@@ -76,6 +79,86 @@ export class ReviewService {
       excludeExtraneousValues: true,
     });
   }
+
+  async listMyReviews(
+    user: UserPayloadDto,
+    q: ApiEventGetReviewMyQueryRequestDto,
+  ): Promise<ApiEventGetReviewMyResponseDto> {
+    const page = q.page ?? 1;
+    const limit = q.limit ?? 20;
+
+    const { items, total } = await this.repository.findMyReviews(user.sub, {
+      team: q.team,
+      status: q.status,
+      page,
+      limit,
+    });
+
+    const mapped = items.map((ev) => {
+      let myTeam: Team | null = null;
+      let myStatus: any = null;
+      if (String(ev.plannerReviewerId) === String(user.sub)) {
+        myTeam = Team.PM;
+        myStatus = ev.pmStatus;
+      } else if (String(ev.devReviewerId) === String(user.sub)) {
+        myTeam = Team.DEV;
+        myStatus = ev.devStatus;
+      } else if (String(ev.qaReviewerId) === String(user.sub)) {
+        myTeam = Team.QA;
+        myStatus = ev.qaStatus;
+      } else if (String(ev.csReviewerId) === String(user.sub)) {
+        myTeam = Team.CS;
+        myStatus = ev.csStatus;
+      }
+
+      return plainToInstance(
+        ReviewMyItemDto,
+        {
+          id: String(ev.id),
+          name: ev.name,
+          description: ev.description,
+          isConfidential: ev.isConfidential,
+          ownerId: ev.ownerId,
+          myTeam,
+          myStatus,
+          finalStatus: ev.finalStatus,
+          startAt: ev.startAt,
+          endAt: ev.endAt,
+        },
+        { excludeExtraneousValues: true },
+      );
+    });
+
+    return plainToInstance(
+      ApiEventGetReviewMyResponseDto,
+      {
+        items: mapped,
+        total,
+        page,
+        limit,
+      },
+      { excludeExtraneousValues: true },
+    );
+  }
+
+  async getTeamHistoryReviews(
+    user: UserPayloadDto,
+    id: string,
+    team: Team,
+  ): Promise<ApiEventGetReviewHistoryResponseDto> {
+    const event = await this.repository.findById(id);
+    if (!event) throw new NotFoundException('Event not found');
+    if (!canReadReviewHistory(user, event)) throw new ForbiddenException('Access denied');
+
+    const items = (event.reviewHistory ?? []).filter((h) => h.team === team);
+    return plainToInstance(
+      ApiEventGetReviewHistoryResponseDto,
+      { id: event.id, items },
+      { excludeExtraneousValues: true },
+    );
+  }
+
+  // -------------helper----------------
 
   private async requireEvent(id: string): Promise<GameEventDocument> {
     const event = await this.repository.findById(id);

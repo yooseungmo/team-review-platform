@@ -16,6 +16,7 @@ import { plainToInstance } from 'class-transformer';
 import { ApiEventCommonResponseDto } from './dto/api-event-common-response.dto';
 import { ApiEventGetQueryRequestDto } from './dto/api-event-get-query-request.dto';
 import { ApiEventGetQueryResponseDto } from './dto/api-event-get-query-response.dto';
+import { ApiEventPatchReviewersRequestDto } from './dto/api-event-patch-reviewers-request.dto';
 import { ApiEventPatchUpdateRequestDto } from './dto/api-event-patch-update-request.dto';
 import { ApiEventPostCreateRequestDto } from './dto/api-event-post-create-request.dto';
 import { EventMongoRepository } from './event.mongo.repository';
@@ -135,5 +136,50 @@ export class EventService {
 
     await this.repository.deleteById(id);
     return { success: true };
+  }
+
+  async updateReviewers(user: UserPayloadDto, id: string, dto: ApiEventPatchReviewersRequestDto) {
+    const event = await this.repository.findById(id);
+    if (!event) throw new NotFoundException('Event not found');
+    if (!canModifyEvent(user, event)) throw new ForbiddenException('Only ADMIN or owner(PLANNER)');
+
+    const nextReviewers = {
+      pm: dto.plannerReviewerId ?? event.plannerReviewerId,
+      dev: dto.devReviewerId ?? event.devReviewerId,
+      qa: dto.qaReviewerId ?? event.qaReviewerId,
+      cs: dto.csReviewerId ?? event.csReviewerId,
+    };
+
+    // 상태 자동 재계산(NOT_REQUIRED/PENDING 전환)
+    const nextStatuses = recalcStatusesOnReviewerChange(
+      {
+        pmStatus: event.pmStatus,
+        devStatus: event.devStatus,
+        qaStatus: event.qaStatus,
+        csStatus: event.csStatus,
+      },
+      nextReviewers,
+    );
+
+    const nextFinal = calcFinalStatus(nextStatuses as any);
+    const update = {
+      $set: {
+        plannerReviewerId: nextReviewers.pm ?? null,
+        devReviewerId: nextReviewers.dev ?? null,
+        qaReviewerId: nextReviewers.qa ?? null,
+        csReviewerId: nextReviewers.cs ?? null,
+        pmStatus: nextStatuses.pmStatus,
+        devStatus: nextStatuses.devStatus,
+        qaStatus: nextStatuses.qaStatus,
+        csStatus: nextStatuses.csStatus,
+        finalStatus: nextFinal,
+        approvedAt: nextFinal === 'APPROVED' ? new Date() : null,
+      },
+    };
+
+    const updated = await this.repository.atomicGuardedUpdateById(id, {}, update, dto.v);
+    if (!updated) throw new ConflictException('Version conflict');
+
+    return plainToInstance(ApiEventCommonResponseDto, updated, { excludeExtraneousValues: true });
   }
 }

@@ -1,4 +1,4 @@
-import { Role, UserPayloadDto } from '@app/common';
+import { ReviewStatus, Role, Team, UserPayloadDto } from '@app/common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, UpdateQuery } from 'mongoose';
@@ -53,6 +53,58 @@ export class EventMongoRepository {
     return this.model.findByIdAndDelete(id).exec();
   }
 
+  /**
+   * 리뷰 갱신용: _id + (선택)가드 + (선택)버전(v)을 모두 만족해야 업데이트.
+   * 성공 시 v를 +1 증분하여 다음 요청은 반드시 최신 v를 요구하게 함.
+   */
+  async atomicGuardedUpdateById(
+    id: string,
+    guards: FilterQuery<GameEvent>,
+    update: UpdateQuery<GameEvent>,
+    expectedVersion?: number,
+  ) {
+    const query: FilterQuery<GameEvent> = { _id: id, ...guards };
+    if (typeof expectedVersion === 'number') (query as any).v = expectedVersion;
+
+    const nextUpdate: UpdateQuery<GameEvent> = {
+      $inc: { v: 1 },
+      $currentDate: { updatedAt: true },
+      ...update,
+    };
+
+    return this.model
+      .findOneAndUpdate(query, nextUpdate, { new: true, runValidators: true })
+      .exec();
+  }
+
+  async findMyReviews(
+    userId: string,
+    opts: { team?: Team; status?: ReviewStatus; page: number; limit: number },
+  ) {
+    const { team, status, page, limit } = opts;
+    const or: FilterQuery<any>[] = [];
+
+    const push = (cond: FilterQuery<any>) => or.push(cond);
+
+    if (!team || team === Team.PM)
+      push({ plannerReviewerId: userId, ...(status ? { pmStatus: status } : {}) });
+    if (!team || team === Team.DEV)
+      push({ devReviewerId: userId, ...(status ? { devStatus: status } : {}) });
+    if (!team || team === Team.QA)
+      push({ qaReviewerId: userId, ...(status ? { qaStatus: status } : {}) });
+    if (!team || team === Team.CS)
+      push({ csReviewerId: userId, ...(status ? { csStatus: status } : {}) });
+
+    const filter: FilterQuery<any> = or.length ? { $or: or } : { _id: null }; // 배정 없으면 빈 결과
+    const skip = (page - 1) * limit;
+
+    return Promise.all([
+      this.model.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(limit).exec(),
+      this.model.countDocuments(filter).exec(),
+    ]).then(([items, total]) => ({ items, total }));
+  }
+
+  // ----------------helper--------------------
   private buildAccessFilter(user: UserPayloadDto): FilterQuery<GameEvent> {
     if (user.role === Role.ADMIN) {
       return {};
@@ -88,29 +140,5 @@ export class EventMongoRepository {
     if (xs.length === 0) return {};
     if (xs.length === 1) return xs[0];
     return { $and: xs };
-  }
-
-  /**
-   * 리뷰 갱신용: _id + (선택)가드 + (선택)버전(v)을 모두 만족해야 업데이트.
-   * 성공 시 v를 +1 증분하여 다음 요청은 반드시 최신 v를 요구하게 함.
-   */
-  async atomicGuardedUpdateById(
-    id: string,
-    guards: FilterQuery<GameEvent>,
-    update: UpdateQuery<GameEvent>,
-    expectedVersion?: number,
-  ) {
-    const query: FilterQuery<GameEvent> = { _id: id, ...guards };
-    if (typeof expectedVersion === 'number') (query as any).v = expectedVersion;
-
-    const nextUpdate: UpdateQuery<GameEvent> = {
-      $inc: { v: 1 },
-      $currentDate: { updatedAt: true },
-      ...update,
-    };
-
-    return this.model
-      .findOneAndUpdate(query, nextUpdate, { new: true, runValidators: true })
-      .exec();
   }
 }

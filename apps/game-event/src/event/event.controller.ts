@@ -22,6 +22,7 @@ import {
 import { ApiEventCommonResponseDto } from './dto/api-event-common-response.dto';
 import { ApiEventGetQueryRequestDto } from './dto/api-event-get-query-request.dto';
 import { ApiEventGetQueryResponseDto } from './dto/api-event-get-query-response.dto';
+import { ApiEventPatchReviewersRequestDto } from './dto/api-event-patch-reviewers-request.dto';
 import { ApiEventPatchUpdateRequestDto } from './dto/api-event-patch-update-request.dto';
 import { ApiEventPostCreateRequestDto } from './dto/api-event-post-create-request.dto';
 import { EventService } from './event.service';
@@ -99,5 +100,27 @@ export class EventController {
   @ApiResponse({ status: 404, description: '이벤트를 찾을 수 없음' })
   async remove(@CurrentUser() user: UserPayloadDto, @Param('id') id: string) {
     return this.service.removeByOwnerOrAdmin(user, id);
+  }
+
+  @Patch(':id/reviewers')
+  @Rbac(Role.ADMIN, Role.PLANNER)
+  @ApiOperation({ summary: '이벤트 리뷰어 재지정 (ADMIN/PLANNER 소유자)' })
+  @ApiParam({ name: 'id', description: '이벤트 ID', example: '66f01a2b3c4d5e6f77889900' })
+  @ApiBody({ type: ApiEventPatchReviewersRequestDto })
+  @ApiResponse({
+    status: 200,
+    type: ApiEventCommonResponseDto,
+    description: '리뷰어와 상태가 갱신됨',
+  })
+  @ApiResponse({ status: 401, description: '인증 필요' })
+  @ApiResponse({ status: 403, description: '권한 없음(소유자 아님)' })
+  @ApiResponse({ status: 404, description: '이벤트 없음' })
+  @ApiResponse({ status: 409, description: '버전 충돌' })
+  patchReviewers(
+    @CurrentUser() user: UserPayloadDto,
+    @Param('id') id: string,
+    @Body() dto: ApiEventPatchReviewersRequestDto,
+  ) {
+    return this.service.updateReviewers(user, id, dto);
   }
 }
