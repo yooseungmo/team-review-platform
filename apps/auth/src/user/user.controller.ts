@@ -18,6 +18,9 @@ export class UserController {
   @Get(':id')
   @ApiOperation({ summary: '사용자 상세 조회 (ADMIN)' })
   @ApiResponse({ status: 200, type: ApiUserGetByIdResponseDto })
+  @ApiResponse({ status: 401, description: '인증 필요' })
+  @ApiResponse({ status: 403, description: 'ADMIN 전용' })
+  @ApiResponse({ status: 404, description: '사용자 없음' })
   async getUserById(@Param('id') id: string) {
     return this.userService.getUserById(id);
   }
@@ -25,6 +28,9 @@ export class UserController {
   @Get('')
   @ApiOperation({ summary: '사용자 목록 조회 (ADMIN) — filter + pagination' })
   @ApiResponse({ status: 200, type: ApiUserGetQueryResponseDto })
+  @ApiResponse({ status: 400, description: '쿼리 유효성 오류(page/limit 등)' })
+  @ApiResponse({ status: 401, description: '인증 필요' })
+  @ApiResponse({ status: 403, description: 'ADMIN 전용' })
   async list(@Query() q: ApiUserGetQueryRequestDto) {
     return this.userService.listUsers(q);
   }
@@ -40,6 +46,10 @@ export class UserController {
   `,
   })
   @ApiResponse({ status: 200, type: ApiUserPatchRoleTeamResponseDto })
+  @ApiResponse({ status: 400, description: '유효성 오류 또는 역할/팀 규칙 위반' })
+  @ApiResponse({ status: 401, description: '인증 필요' })
+  @ApiResponse({ status: 403, description: 'ADMIN 전용' })
+  @ApiResponse({ status: 404, description: '사용자 없음' })
   updateRoleTeam(@Param('id') id: string, @Body() dto: ApiUserPatchRoleTeamRequestDto) {
     return this.userService.updateUserRoleTeam(id, dto);
   }
@@ -47,6 +57,10 @@ export class UserController {
   @Patch(':id/status')
   @ApiOperation({ summary: '사용자 활성/비활성 (ADMIN)' })
   @ApiResponse({ status: 200, type: ApiUserPatchStatusResponseDto })
+  @ApiResponse({ status: 400, description: '유효성 오류' })
+  @ApiResponse({ status: 401, description: '인증 필요' })
+  @ApiResponse({ status: 403, description: 'ADMIN 전용' })
+  @ApiResponse({ status: 404, description: '사용자 없음' })
   updateStatus(@Param('id') id: string, @Body() dto: ApiUserPatchStatusRequestDto) {
     return this.userService.updateUserStatus(id, dto);
   }

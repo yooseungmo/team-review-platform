@@ -20,18 +20,41 @@ export function recalcStatusesOnReviewerChange(
     qaStatus: ReviewStatus;
     csStatus: ReviewStatus;
   },
-  reviewers: Partial<Record<TeamKey, string | null>>,
+  prevReviewers: Partial<Record<TeamKey, string | null>>,
+  nextReviewers: Partial<Record<TeamKey, string | null>>,
 ) {
-  const next: any = { ...prev };
-  const apply = (k: TeamKey, field: keyof typeof prev) => {
-    const assigned = !!reviewers[k];
-    if (!assigned) next[field] = ReviewStatus.NOT_REQUIRED;
-    else if (prev[field] === ReviewStatus.NOT_REQUIRED) next[field] = ReviewStatus.PENDING;
+  const next: {
+    pmStatus: ReviewStatus;
+    devStatus: ReviewStatus;
+    qaStatus: ReviewStatus;
+    csStatus: ReviewStatus;
+  } = { ...prev };
+
+  const apply = (key: TeamKey, field: keyof typeof prev) => {
+    const previousReviewer = prevReviewers[key] ?? null;
+    const nextReviewer = nextReviewers[key] ?? null;
+
+    if (!nextReviewer) {
+      next[field] = ReviewStatus.NOT_REQUIRED;
+      return;
+    }
+
+    const reviewerChanged = !previousReviewer || previousReviewer !== nextReviewer;
+    if (reviewerChanged) {
+      next[field] = ReviewStatus.PENDING;
+      return;
+    }
+
+    if (prev[field] === ReviewStatus.NOT_REQUIRED) {
+      next[field] = ReviewStatus.PENDING;
+    }
   };
+
   apply('pm', 'pmStatus');
   apply('dev', 'devStatus');
   apply('qa', 'qaStatus');
   apply('cs', 'csStatus');
+
   return next;
 }
 

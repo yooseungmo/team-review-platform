@@ -96,8 +96,9 @@ export class EventController {
     type: ApiEventCommonResponseDto,
     description: '리뷰어와 상태가 갱신됨',
   })
+  @ApiResponse({ status: 400, description: '유효성 오류 또는 리뷰어/상태 불일치' })
   @ApiResponse({ status: 401, description: '인증 필요' })
-  @ApiResponse({ status: 403, description: '권한 없음(소유자 아님)' })
+  @ApiResponse({ status: 403, description: '권한 없음(소유자/ADMIN 아님)' })
   @ApiResponse({ status: 404, description: '이벤트 없음' })
   @ApiResponse({ status: 409, description: '버전 충돌' })
   patchReviewers(

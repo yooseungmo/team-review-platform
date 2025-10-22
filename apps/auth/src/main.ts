@@ -1,3 +1,4 @@
+import { UnifiedExceptionFilter } from '@app/common';
 import { SwaggerModels } from '@app/swagger-models';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -20,6 +21,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  app.useGlobalFilters(new UnifiedExceptionFilter());
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('TRP Auth Service')

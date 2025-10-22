@@ -76,6 +76,7 @@ async function upsertUser(UserModel: Model<UserDocument>, u: SeedUser) {
     exists.team = normalizedTeam;
     exists.isActive = true;
     await exists.save();
+    // eslint-disable-next-line no-console
     console.log(
       `[seed] updated: ${u.email} (${u.role}${normalizedTeam ? `/${normalizedTeam}` : ''})`,
     );
@@ -88,6 +89,7 @@ async function upsertUser(UserModel: Model<UserDocument>, u: SeedUser) {
       team: normalizedTeam,
       isActive: true,
     });
+    // eslint-disable-next-line no-console
     console.log(
       `[seed] created: ${u.email} (${u.role}${normalizedTeam ? `/${normalizedTeam}` : ''})`,
     );
@@ -110,6 +112,7 @@ async function bootstrap() {
 }
 
 bootstrap().catch((e) => {
+  // eslint-disable-next-line no-console
   console.error('[seed] failed:', e);
   process.exit(1);
 });

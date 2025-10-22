@@ -44,9 +44,18 @@ export class EventMongoRepository {
   }
 
   updateById(id: string, update: Partial<GameEvent>, expectedVersion?: number) {
-    const query: any = { _id: id };
-    if (typeof expectedVersion === 'number') query.v = expectedVersion;
-    return this.model.findOneAndUpdate(query, update, { new: true, runValidators: true }).exec();
+    const query: FilterQuery<GameEvent> = { _id: id } as FilterQuery<GameEvent>;
+    if (typeof expectedVersion === 'number') (query as any).v = expectedVersion;
+
+    const nextUpdate: UpdateQuery<GameEvent> = {
+      $set: { ...update },
+      $inc: { v: 1 },
+      $currentDate: { updatedAt: true },
+    };
+
+    return this.model
+      .findOneAndUpdate(query, nextUpdate, { new: true, runValidators: true })
+      .exec();
   }
 
   deleteById(id: string) {

@@ -30,6 +30,8 @@ export class AuthController {
   })
   @ApiBody({ type: ApiAuthPostRegisterRequestDto })
   @ApiResponse({ status: 201, type: ApiAuthPostRegisterResponseDto })
+  @ApiResponse({ status: 400, description: '유효성 오류 또는 역할/팀 규칙 위반' })
+  @ApiResponse({ status: 409, description: '이메일 중복' })
   register(@Body() dto: ApiAuthPostRegisterRequestDto) {
     return this.authService.register(dto);
   }
@@ -39,6 +41,9 @@ export class AuthController {
   @ApiOperation({ summary: '로그인' })
   @ApiBody({ type: ApiAuthPostLoginRequestDto })
   @ApiResponse({ status: 200, type: ApiAuthPostLoginResponseDto })
+  @ApiResponse({ status: 200, type: ApiAuthPostLoginResponseDto, description: '로그인 성공' })
+  @ApiResponse({ status: 400, description: '유효성 오류' })
+  @ApiResponse({ status: 401, description: '미존재 사용자 / 비활성 계정 / 비밀번호 불일치' })
   login(@Body() dto: ApiAuthPostLoginRequestDto) {
     return this.authService.login(dto);
   }
@@ -48,6 +53,11 @@ export class AuthController {
   @ApiOperation({ summary: '로그인 연장 (Access Token 재발급)' })
   @ApiBody({ type: ApiAuthPostRefreshRequestDto })
   @ApiResponse({ status: 200, type: ApiAuthPostRefreshResponseDto })
+  @ApiResponse({ status: 400, description: '유효성 오류' })
+  @ApiResponse({
+    status: 401,
+    description: '만료/형식오류/불일치 리프레시 토큰 또는 미존재/비활성 사용자',
+  })
   async refresh(@Body() dto: ApiAuthPostRefreshRequestDto): Promise<ApiAuthPostRefreshResponseDto> {
     return this.authService.refresh(dto);
   }
@@ -55,6 +65,7 @@ export class AuthController {
   @Post('logout')
   @ApiOperation({ summary: '로그아웃' })
   @ApiResponse({ status: 200, type: ApiAuthPostLogoutResponseDto })
+  @ApiResponse({ status: 401, description: '인증 실패 또는 사용자 없음' })
   async logout(@CurrentUser() user: UserPayloadDto): Promise<ApiAuthPostLogoutResponseDto> {
     return this.authService.logout(user.sub);
   }
@@ -62,6 +73,8 @@ export class AuthController {
   @Get('me')
   @ApiOperation({ summary: '내 프로필 조회(Access Token 검증)' })
   @ApiResponse({ status: 200, type: ApiAuthGetMeResponseDto })
+  @ApiResponse({ status: 401, description: '인증 실패' })
+  @ApiResponse({ status: 404, description: '사용자 없음' })
   async me(@CurrentUser() user: UserPayloadDto): Promise<ApiAuthGetMeResponseDto> {
     return this.authService.me(user.sub);
   }

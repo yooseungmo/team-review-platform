@@ -2,8 +2,10 @@ import {
   calcFinalStatus,
   canModifyEvent,
   canReadEvent,
+  FinalStatus,
   initStatusesByReviewers,
   recalcStatusesOnReviewerChange,
+  ReviewStatus,
   UserPayloadDto,
 } from '@app/common';
 import {
@@ -20,6 +22,7 @@ import { ApiEventPatchReviewersRequestDto } from './dto/api-event-patch-reviewer
 import { ApiEventPatchUpdateRequestDto } from './dto/api-event-patch-update-request.dto';
 import { ApiEventPostCreateRequestDto } from './dto/api-event-post-create-request.dto';
 import { EventMongoRepository } from './event.mongo.repository';
+import { GameEventDocument } from './schemas/event.schema';
 
 @Injectable()
 export class EventService {
@@ -29,7 +32,7 @@ export class EventService {
     user: UserPayloadDto,
     dto: ApiEventPostCreateRequestDto,
   ): Promise<ApiEventCommonResponseDto> {
-    const ownerId = user.role;
+    const ownerId = user.sub;
     const statuses = initStatusesByReviewers({
       pm: dto.plannerReviewerId ?? null,
       dev: dto.devReviewerId ?? null,
@@ -89,6 +92,13 @@ export class EventService {
     if (!canModifyEvent(user, event)) throw new ForbiddenException('Forbidden');
 
     // 리뷰어 변경 -> 상태 재계산
+    const prevReviewers = {
+      pm: event.plannerReviewerId ?? null,
+      dev: event.devReviewerId ?? null,
+      qa: event.qaReviewerId ?? null,
+      cs: event.csReviewerId ?? null,
+    };
+
     const reviewerChanges = {
       pm: dto.plannerReviewerId ?? event.plannerReviewerId,
       dev: dto.devReviewerId ?? event.devReviewerId,
@@ -103,6 +113,7 @@ export class EventService {
         qaStatus: event.qaStatus,
         csStatus: event.csStatus,
       },
+      prevReviewers,
       reviewerChanges,
     );
 
@@ -119,7 +130,11 @@ export class EventService {
       ...nextStatuses,
     };
 
-    patch.finalStatus = calcFinalStatus(patch);
+    Object.assign(patch, this.collectReviewedAtResets(event, nextStatuses));
+
+    const finalStatus = calcFinalStatus(nextStatuses);
+    patch.finalStatus = finalStatus;
+    patch.approvedAt = this.resolveApprovedAt(event, finalStatus);
 
     const updated = await this.repository.updateById(id, patch, dto.v);
     if (!updated) throw new ConflictException('Version conflict or not found');
@@ -143,6 +158,13 @@ export class EventService {
     if (!event) throw new NotFoundException('Event not found');
     if (!canModifyEvent(user, event)) throw new ForbiddenException('Only ADMIN or owner(PLANNER)');
 
+    const prevReviewers = {
+      pm: event.plannerReviewerId ?? null,
+      dev: event.devReviewerId ?? null,
+      qa: event.qaReviewerId ?? null,
+      cs: event.csReviewerId ?? null,
+    };
+
     const nextReviewers = {
       pm: dto.plannerReviewerId ?? event.plannerReviewerId,
       dev: dto.devReviewerId ?? event.devReviewerId,
@@ -158,10 +180,12 @@ export class EventService {
         qaStatus: event.qaStatus,
         csStatus: event.csStatus,
       },
+      prevReviewers,
       nextReviewers,
     );
 
-    const nextFinal = calcFinalStatus(nextStatuses as any);
+    const nextFinal = calcFinalStatus(nextStatuses);
+    const reviewedAtResets = this.collectReviewedAtResets(event, nextStatuses);
     const update = {
       $set: {
         plannerReviewerId: nextReviewers.pm ?? null,
@@ -173,7 +197,8 @@ export class EventService {
         qaStatus: nextStatuses.qaStatus,
         csStatus: nextStatuses.csStatus,
         finalStatus: nextFinal,
-        approvedAt: nextFinal === 'APPROVED' ? new Date() : null,
+        approvedAt: this.resolveApprovedAt(event, nextFinal),
+        ...reviewedAtResets,
       },
     };
 
@@ -181,5 +206,48 @@ export class EventService {
     if (!updated) throw new ConflictException('Version conflict');
 
     return plainToInstance(ApiEventCommonResponseDto, updated, { excludeExtraneousValues: true });
+  }
+
+  private collectReviewedAtResets(
+    event: GameEventDocument,
+    next: {
+      pmStatus: ReviewStatus;
+      devStatus: ReviewStatus;
+      qaStatus: ReviewStatus;
+      csStatus: ReviewStatus;
+    },
+  ): Record<string, null> {
+    const entries: Array<
+      [keyof typeof next, 'pmReviewedAt' | 'devReviewedAt' | 'qaReviewedAt' | 'csReviewedAt']
+    > = [
+      ['pmStatus', 'pmReviewedAt'],
+      ['devStatus', 'devReviewedAt'],
+      ['qaStatus', 'qaReviewedAt'],
+      ['csStatus', 'csReviewedAt'],
+    ];
+
+    return entries.reduce<Record<string, null>>((acc, [statusKey, reviewedAtKey]) => {
+      const prevStatus = (event as any)[statusKey] as ReviewStatus;
+      const nextStatus = next[statusKey];
+
+      if (
+        nextStatus !== prevStatus &&
+        (nextStatus === ReviewStatus.PENDING || nextStatus === ReviewStatus.NOT_REQUIRED)
+      ) {
+        acc[reviewedAtKey] = null;
+      }
+
+      return acc;
+    }, {});
+  }
+
+  private resolveApprovedAt(event: GameEventDocument, nextFinal: FinalStatus): Date | null {
+    if (nextFinal === FinalStatus.APPROVED) {
+      if (event.finalStatus === FinalStatus.APPROVED && event.approvedAt) {
+        return event.approvedAt;
+      }
+      return new Date();
+    }
+    return null;
   }
 }

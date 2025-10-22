@@ -1,3 +1,4 @@
+import { UnifiedExceptionFilter } from '@app/common';
 import { SwaggerModels } from '@app/swagger-models';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -11,6 +12,8 @@ async function bootstrap() {
     origin: (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim()),
     credentials: true,
   });
+
+  app.useGlobalFilters(new UnifiedExceptionFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({

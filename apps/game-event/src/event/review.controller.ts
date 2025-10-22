@@ -72,6 +72,8 @@ export class ReviewController {
   @Get('reviews/my')
   @ApiOperation({ summary: '내 리뷰 작업함(배정된 이벤트)' })
   @ApiResponse({ status: 200, type: ApiEventGetReviewMyResponseDto })
+  @ApiResponse({ status: 400, description: '쿼리 유효성 오류(team/status/page/limit)' })
+  @ApiResponse({ status: 401, description: '인증 필요' })
   async listMy(
     @CurrentUser() user: UserPayloadDto,
     @Query() q: ApiEventGetReviewMyQueryRequestDto,
@@ -84,6 +86,8 @@ export class ReviewController {
   @ApiParam({ name: 'id', example: '66f01a2b3c4d5e6f77889900' })
   @ApiParam({ name: 'team', enum: Team, example: Team.QA })
   @ApiResponse({ status: 200, type: ApiEventGetReviewHistoryResponseDto })
+  @ApiResponse({ status: 400, description: '잘못된 ID 형식 또는 team 값 파싱 실패' })
+  @ApiResponse({ status: 401, description: '인증 필요' })
   @ApiResponse({ status: 403, description: '접근 권한 없음' })
   @ApiResponse({ status: 404, description: '이벤트 없음' })
   async getTeamHistory(
