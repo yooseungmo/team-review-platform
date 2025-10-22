@@ -7,6 +7,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim()),
+    credentials: true,
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -17,8 +22,8 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Team Review Platform API')
-    .setDescription('Gateway / Auth / Game-Event docs')
+    .setTitle('TRP Auth Service')
+    .setDescription('signup/login/refresh/logout, users...')
     .addTag('Auth')
     .setVersion('1.0.0')
     .addServer('http://localhost:3001', 'Auth (Local)')
@@ -37,7 +42,10 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(process.env.port ?? 3000);
+  const http = app.getHttpAdapter().getInstance();
+  http.get('/healthz', (_req, res) => res.status(200).send('ok'));
+
+  await app.listen(Number(process.env.PORT) || 3000, '0.0.0.0');
 }
 
 bootstrap();

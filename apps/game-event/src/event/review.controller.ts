@@ -1,16 +1,5 @@
-import { CurrentUser, Rbac, Role, Team, UserPayloadDto } from '@app/common';
-
-import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseEnumPipe,
-  Patch,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { CurrentUser, Team, UserPayloadDto } from '@app/common';
+import { Body, Controller, Get, Param, ParseEnumPipe, Patch, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -28,7 +17,6 @@ import { ReviewService } from './review.service';
 
 @ApiTags('Reviews')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, RbacGuard)
 @Controller('events')
 export class ReviewController {
   constructor(private readonly service: ReviewService) {}
@@ -56,7 +44,6 @@ export class ReviewController {
   }
 
   @Patch(':id/reviews/status')
-  @Rbac(Role.ADMIN, Role.REVIEWER)
   @ApiOperation({
     summary: '리뷰 상태 업데이트 (REVIEWER/ADMIN)',
     description:
@@ -83,7 +70,6 @@ export class ReviewController {
   }
 
   @Get('reviews/my')
-  @Rbac(Role.REVIEWER, Role.ADMIN)
   @ApiOperation({ summary: '내 리뷰 작업함(배정된 이벤트)' })
   @ApiResponse({ status: 200, type: ApiEventGetReviewMyResponseDto })
   async listMy(

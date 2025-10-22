@@ -10,7 +10,7 @@ import { EventModule } from './event/event.module';
       isGlobal: true,
       envFilePath: 'apps/game-event/.env',
       validationSchema: Joi.object({
-        PORT: Joi.number().default(3002),
+        PORT: Joi.number().default(3000),
         MONGODB_URI: Joi.string().uri().required(),
         MONGODB_DB: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
@@ -19,6 +19,7 @@ import { EventModule } from './event/event.module';
         JWT_AUD: Joi.string().required(),
         REFRESH_TOKEN_SECRET: Joi.string().required(),
         REFRESH_TOKEN_EXPIRES_IN: Joi.string().default('7d'),
+        CORS_ORIGIN: Joi.string().required(),
       }),
     }),
     MongooseModule.forRootAsync({

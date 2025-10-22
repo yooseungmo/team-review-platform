@@ -1,16 +1,5 @@
-import { CurrentUser, Rbac, Role, UserPayloadDto } from '@app/common';
-import { JwtAuthGuard, RbacGuard } from '@app/common/guard';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { CurrentUser, UserPayloadDto } from '@app/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -29,13 +18,11 @@ import { EventService } from './event.service';
 
 @ApiTags('Events')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, RbacGuard)
 @Controller('events')
 export class EventController {
   constructor(private readonly service: EventService) {}
 
   @Post()
-  @Rbac(Role.ADMIN, Role.PLANNER)
   @ApiOperation({
     summary: '이벤트 생성',
     description: `PLANNER 또는 ADMIN만 생성 가능. 리뷰어가 지정된 팀은 PENDING, 미지정은 NOT_REQUIRED로 초기화되고 finalStatus는 자동 계산됩니다.`,
@@ -72,7 +59,6 @@ export class EventController {
   }
 
   @Patch(':id')
-  @Rbac(Role.ADMIN, Role.PLANNER)
   @ApiOperation({ summary: '이벤트 수정 (ADMIN 또는 담당자)' })
   @ApiParam({ name: 'id', description: '이벤트 ID', example: '66f01a2b3c4d5e6f77889900' })
   @ApiBody({ type: ApiEventPatchUpdateRequestDto })
@@ -91,7 +77,6 @@ export class EventController {
   }
 
   @Delete(':id')
-  @Rbac(Role.ADMIN, Role.PLANNER)
   @ApiOperation({ summary: '이벤트 삭제 (ADMIN 또는 담당자)' })
   @ApiParam({ name: 'id', description: '이벤트 ID', example: '66f01a2b3c4d5e6f77889900' })
   @ApiResponse({ status: 200, description: '삭제 성공: { success: true }' })
@@ -103,7 +88,6 @@ export class EventController {
   }
 
   @Patch(':id/reviewers')
-  @Rbac(Role.ADMIN, Role.PLANNER)
   @ApiOperation({ summary: '이벤트 리뷰어 재지정 (ADMIN/PLANNER 소유자)' })
   @ApiParam({ name: 'id', description: '이벤트 ID', example: '66f01a2b3c4d5e6f77889900' })
   @ApiBody({ type: ApiEventPatchReviewersRequestDto })

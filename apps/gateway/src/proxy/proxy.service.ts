@@ -1,44 +1,61 @@
-import { HttpService } from '@nestjs/axios';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { UserPayloadDto } from '@app/common';
+import { Injectable } from '@nestjs/common';
+import axios, { AxiosRequestConfig } from 'axios';
+import { randomUUID } from 'crypto';
+import { Request } from 'express';
+
+const HOP_BY_HOP = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'content-length',
+  'host',
+]);
+
+function sanitizeOutgoingHeaders(req: Request) {
+  const headers: Record<string, any> = { ...req.headers };
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const h of HOP_BY_HOP) delete headers[h];
+
+  Object.keys(headers).forEach((k) => {
+    if (k.toLowerCase().startsWith('x-user-')) delete headers[k];
+  });
+
+  // 요청 ID 붙이기
+  if (!headers['x-request-id']) headers['x-request-id'] = randomUUID();
+
+  return headers;
+}
 
 @Injectable()
 export class ProxyService {
-  constructor(
-    private readonly http: HttpService,
-    private readonly config: ConfigService,
-  ) {}
+  async forward(req: Request, baseUrl: string, overridePath?: string): Promise<any> {
+    const url = baseUrl + (overridePath ?? req.url);
+    const method = req.method as AxiosRequestConfig['method'];
 
-  private getEnv(key: string): string {
-    const value = this.config.get<string>(key);
-    if (!value) throw new InternalServerErrorException(`${key} is not defined in config`);
-    return value;
-  }
+    const headers = sanitizeOutgoingHeaders(req);
 
-  private _authBase?: string;
-  private get authBase(): string {
-    if (!this._authBase) this._authBase = this.getEnv('AUTH_SERVICE_URL');
-    return this._authBase;
-  }
+    const user = req.user as UserPayloadDto | undefined;
 
-  private _eventBase?: string;
-  private get eventBase(): string {
-    if (!this._eventBase) this._eventBase = this.getEnv('GAME_EVENT_SERVICE_URL');
-    return this._eventBase;
-  }
+    headers['x-user-id'] = user?.sub ?? '';
+    headers['x-user-role'] = user?.role ?? '';
+    headers['x-user-team'] = user?.team ?? '';
 
-  async forwardToAuth(method: string, path: string, data?: any, params?: any) {
-    const url = `${this.authBase}${path}`;
-    const req$ = this.http.request({ method, url, data, params });
-    const { data: res } = await firstValueFrom(req$);
-    return res;
-  }
+    const cfg: AxiosRequestConfig = {
+      url,
+      method,
+      headers,
+      data: req.body,
+      validateStatus: () => true,
+    };
 
-  async forwardToEvent(method: string, path: string, data?: any, params?: any) {
-    const url = `${this.eventBase}${path}`;
-    const req$ = this.http.request({ method, url, data, params });
-    const { data: res } = await firstValueFrom(req$);
-    return res;
+    const r = await axios(cfg);
+    return { status: r.status, headers: r.headers, data: r.data };
   }
 }
