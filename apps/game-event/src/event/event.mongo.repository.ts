@@ -1,7 +1,7 @@
 import { Role, UserPayloadDto } from '@app/common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, UpdateQuery } from 'mongoose';
 import { ApiEventGetQueryRequestDto } from './dto/api-event-get-query-request.dto';
 import { GameEvent, GameEventDocument } from './schemas/event.schema';
 
@@ -88,5 +88,29 @@ export class EventMongoRepository {
     if (xs.length === 0) return {};
     if (xs.length === 1) return xs[0];
     return { $and: xs };
+  }
+
+  /**
+   * 리뷰 갱신용: _id + (선택)가드 + (선택)버전(v)을 모두 만족해야 업데이트.
+   * 성공 시 v를 +1 증분하여 다음 요청은 반드시 최신 v를 요구하게 함.
+   */
+  async atomicGuardedUpdateById(
+    id: string,
+    guards: FilterQuery<GameEvent>,
+    update: UpdateQuery<GameEvent>,
+    expectedVersion?: number,
+  ) {
+    const query: FilterQuery<GameEvent> = { _id: id, ...guards };
+    if (typeof expectedVersion === 'number') (query as any).v = expectedVersion;
+
+    const nextUpdate: UpdateQuery<GameEvent> = {
+      $inc: { v: 1 },
+      $currentDate: { updatedAt: true },
+      ...update,
+    };
+
+    return this.model
+      .findOneAndUpdate(query, nextUpdate, { new: true, runValidators: true })
+      .exec();
   }
 }

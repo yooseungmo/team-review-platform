@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { EventController } from './event.controller';
 import { EventMongoRepository } from './event.mongo.repository';
 import { EventService } from './event.service';
+import { ReviewController } from './review.controller';
+import { ReviewService } from './review.service';
 import { GameEvent, GameEventSchema } from './schemas/event.schema';
 import { JwtStrategy } from './strategy/jwt.strategy';
 
@@ -20,7 +22,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
       }),
     }),
   ],
-  controllers: [EventController],
-  providers: [EventService, EventMongoRepository, JwtStrategy],
+  controllers: [EventController, ReviewController],
+  providers: [EventService, EventMongoRepository, JwtStrategy, ReviewService],
 })
 export class EventModule {}

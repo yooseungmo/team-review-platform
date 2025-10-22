@@ -6,8 +6,11 @@ import { ApiUserGetQueryRequestDto } from '../../../apps/auth/src/user/dto/api-u
 import { ApiUserGetQueryResponseDto } from '../../../apps/auth/src/user/dto/api-user-get-query-response.dto';
 import { ApiUserPatchRoleTeamResponseDto } from '../../../apps/auth/src/user/dto/api-user-patch-role-team-response.dto';
 import { ApiUserPatchStatusResponseDto } from '../../../apps/auth/src/user/dto/api-user-patch-status-response.dto';
+import { ApiUserSummaryDto } from '../../../apps/auth/src/user/dto/user-summary.dto';
 import { ApiEventCommonResponseDto } from '../../../apps/game-event/src/event/dto/api-event-common-response.dto';
 import { ApiEventGetQueryResponseDto } from '../../../apps/game-event/src/event/dto/api-event-get-query-response.dto';
+import { ApiEventGetReviewStatusResponseDto } from '../../../apps/game-event/src/event/dto/api-event-get-review-status-response.dto';
+import { ReviewHistoryItemDto } from '../../../apps/game-event/src/event/dto/review-history-item.dto';
 
 export const SwaggerModels = [
   ApiAuthPostRegisterResponseDto,
@@ -15,10 +18,13 @@ export const SwaggerModels = [
   ApiAuthPostRefreshResponseDto,
   ApiAuthPostLogoutResponseDto,
   ApiAuthPostRegisterResponseDto,
+  ApiUserSummaryDto,
   ApiUserGetQueryRequestDto,
   ApiUserGetQueryResponseDto,
   ApiUserPatchRoleTeamResponseDto,
   ApiUserPatchStatusResponseDto,
   ApiEventCommonResponseDto,
   ApiEventGetQueryResponseDto,
+  ApiEventGetReviewStatusResponseDto,
+  ReviewHistoryItemDto,
 ];

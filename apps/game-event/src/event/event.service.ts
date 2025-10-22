@@ -136,9 +136,4 @@ export class EventService {
     await this.repository.deleteById(id);
     return { success: true };
   }
-
-  // private toJSON(doc: any) {
-  //   const { _id, ...rest } = doc.toObject({ versionKey: false });
-  //   return { id: String(_id), ...rest };
-  // }
 }

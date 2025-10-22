@@ -37,10 +37,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Invalid token audience');
     }
 
-    // 과제 요구: role/team 포함(단일값)
     if (!payload.role) throw new UnauthorizedException('Missing role in token');
     if (payload.team === undefined) {
-      // team은 REVIEWER/PLANNER면 필수, 그 외 null 가능 → 구체 검증은 서비스/도메인 가드에서
+      // TODB 수정
     }
 
     return payload;
