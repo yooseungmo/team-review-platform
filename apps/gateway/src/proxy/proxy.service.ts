@@ -1,8 +1,10 @@
 import { UserPayloadDto } from '@app/common';
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import axios, { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
+import { lastValueFrom } from 'rxjs';
 
 const HOP_BY_HOP = new Set([
   'connection',
@@ -35,6 +37,8 @@ function sanitizeOutgoingHeaders(req: Request) {
 
 @Injectable()
 export class ProxyService {
+  constructor(private readonly http: HttpService) {}
+
   async forward(req: Request, baseUrl: string, overridePath?: string): Promise<any> {
     const url = baseUrl + (overridePath ?? req.url);
     const method = req.method as AxiosRequestConfig['method'];
@@ -51,11 +55,12 @@ export class ProxyService {
       url,
       method,
       headers,
-      data: req.body,
-      validateStatus: () => true,
+      params: req.query,
+      data: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body,
+      // validateStatus: () => true,
     };
 
-    const r = await axios(cfg);
+    const r = await lastValueFrom(this.http.request(cfg));
     return { status: r.status, headers: r.headers, data: r.data };
   }
 }

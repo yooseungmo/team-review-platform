@@ -1,10 +1,10 @@
 {
   "name": "team-review-platform",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Gateway-centric MSA-based game event review management platform built with NestJS",
+  "author": "Yoo SeungMo (https://github.com/yooseungmo)",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",

@@ -70,6 +70,7 @@ export function calcFinalStatus(s: {
 
   if (considered.some((x) => x === ReviewStatus.REJECTED)) return FinalStatus.REJECTED;
   if (considered.some((x) => x === ReviewStatus.PENDING)) return FinalStatus.IN_PROGRESS;
+  if (considered.length === 0) return FinalStatus.APPROVED;
   if (considered.length > 0 && considered.every((x) => x === ReviewStatus.APPROVED))
     return FinalStatus.APPROVED;
 
