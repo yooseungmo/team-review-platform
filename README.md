@@ -23,6 +23,7 @@ JWT 기반 인증과 RBAC 권한 제어, 리뷰 상태 머신, 동시성 제어 
 - [주요 API](#-주요-api)
 - [핵심 구현 상세](#-핵심-구현-상세)
 - [보안](#-보안)
+- [Gateway 보호](#-gateway-보호)
 - [코딩 컨벤션](#-코딩-컨벤션)
 - [기술적 의사결정](#-기술적-의사결정)
 - [향후 개선](#️-향후-개선)
@@ -401,6 +402,13 @@ PATCH /events/{id}
 
 ---
 
+## 🛡 Gateway 보호
+
+- **Rate Limit:** IP 기반 in-memory 윈도우. `GATEWAY_RATE_LIMIT_TTL_SEC` / `GATEWAY_RATE_LIMIT_LIMIT` 으로 조절하며, CORS Preflight/헬스체크는 예외 처리.
+- **Circuit Breaker:** 다운스트림(AUTH/GAME-EVENT)별 회로 차단. `GATEWAY_CB_FAILURE_THRESHOLD` 연속 실패 시 `GATEWAY_CB_COOLDOWN_MS` 동안 OPEN → `Retry-After`/`x-gateway-circuit` 헤더로 상태 노출.
+
+---
+
 ## 📋 코딩 컨벤션
 
 - Airbnb Style Guide + ESLint + Prettier
@@ -430,7 +438,6 @@ Gateway 중심 아키텍처를 채택한 이유는 인증/인가를 한 곳에 �
 
 - 테스트 코드 보강 (Unit/E2E): 핵심 도메인 로직 우선 적용
 - 에러 응답 스키마 통일 (공통 Error DTO / Error Code Enum)
-- Gateway 레이어 rate limit / circuit breaker 적용
 - Observability 고도화(구조적 로깅, trace 연동)
 - K8s 전환 준비
 
@@ -441,4 +448,3 @@ Gateway 중심 아키텍처를 채택한 이유는 인증/인가를 한 곳에 �
 이 프로젝트는 [MIT License](./LICENSE)에 따라 배포 및 사용이 가능합니다.
 
 ---
-
